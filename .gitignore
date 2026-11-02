@@ -1,0 +1,18 @@
+# virtual environment (never upload this)
+venv/
+.venv/
+env/
+
+# python
+__pycache__/
+*.pyc
+
+# notebooks / OS / editor
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# secrets
+.env
