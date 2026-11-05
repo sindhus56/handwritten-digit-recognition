@@ -5,6 +5,7 @@ Pages: Home, Draw, Upload, History, About
 """
 
 import base64
+import csv
 import io
 import os
 from datetime import datetime
@@ -24,6 +25,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# Contact links shown at the bottom of the About page. Leave a value as "" to hide it.
+CONTACT = {
+    "GitHub": "https://github.com/sindhus56",
+    "LinkedIn": "https://www.linkedin.com/in/sindhu-s56/",
+    "Email": "sindhus5656@gmail.com",
+}
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "final_knn_model.pkl")
 
@@ -66,7 +74,7 @@ CSS = """
     background:#fff; color:#2b2160; border:1px solid #cfc5f5;}
 
 /* ---------- white cards ---------- */
-.st-key-card, .st-key-card2{
+.st-key-card, .st-key-card2, .st-key-card3{
     background:#fff; border-radius:22px; padding:1.4rem 1.6rem;
     box-shadow:0 18px 40px rgba(91,75,219,.18);}
 .card-title{color:#2b2160; font-size:1.35rem; font-weight:700; margin:0;}
@@ -79,21 +87,21 @@ CSS = """
 .chk{color:#2b2160; font-size:1rem; display:flex; align-items:center; gap:.7rem; margin:.35rem 0;}
 .chk b{background:#22a06b; color:#fff; width:22px; height:22px; border-radius:50%;
        display:inline-flex; align-items:center; justify-content:center; font-size:.8rem;}
-.pv-wrap{display:flex; gap:1rem; align-items:center; justify-content:center; padding-top:1rem;}
-.pv-card{background:#fff; border-radius:20px; padding:14px; width:230px; transform:rotate(-4deg);
+.pv-wrap{display:flex; gap:1rem; align-items:center; justify-content:center; padding-top:.2rem; flex-wrap:nowrap;}
+.pv-card{background:#fff; border-radius:22px; padding:16px; width:285px; transform:rotate(-4deg);
          box-shadow:0 18px 40px rgba(91,75,219,.22);}
-.pv-tabs{display:flex; gap:8px; margin-bottom:10px; font-size:.8rem; font-weight:600;}
+.pv-tabs{display:flex; gap:8px; margin-bottom:12px; font-size:.9rem; font-weight:600;}
 .pv-tabs span{padding:6px 14px; border-radius:8px; color:#5b5390;}
 .pv-tabs span.on{background:#5b4bdb; color:#fff;}
-.pv-pad{border:1px solid #e3dcf8; border-radius:12px; height:190px; display:flex;
+.pv-pad{border:1px solid #e3dcf8; border-radius:14px; height:255px; display:flex;
         align-items:center; justify-content:center; font-family:'Caveat',cursive;
-        font-size:9rem; color:#111; line-height:1;}
-.pv-res{background:#fff; border-radius:20px; padding:16px; width:170px; text-align:center;
+        font-size:12rem; color:#111; line-height:1;}
+.pv-res{background:#fff; border-radius:22px; padding:20px 14px; width:185px; text-align:center;
         transform:rotate(3deg); box-shadow:0 18px 40px rgba(91,75,219,.22);}
-.script{font-family:'Caveat',cursive; color:#6d3df0; font-size:2.2rem; text-align:right;
-        transform:rotate(-5deg); margin-top:.5rem;}
+.script{font-family:'Caveat',cursive; color:#6d3df0; font-size:2.6rem; text-align:right;
+        transform:rotate(-5deg); margin-top:.2rem;}
 .chips{display:flex; gap:2.4rem; color:#4a4380; font-size:.9rem; font-weight:500;
-       margin-top:1.6rem; padding-top:1rem; border-top:1px solid rgba(91,75,219,.20);}
+       margin-top:.6rem; padding-top:.8rem; border-top:1px solid rgba(91,75,219,.20);}
 
 /* ---------- prediction result ---------- */
 .res-title{color:#2b2160; font-weight:700; font-size:1.1rem;}
@@ -124,11 +132,75 @@ CSS = """
 .glass h4{margin:0 0 .8rem; font-size:1.1rem; font-weight:700; color:#2b2160;}
 .row{display:flex; gap:1rem; font-size:.92rem; margin:.4rem 0; color:#2b2160;}
 .row span:first-child{width:90px; color:#6a62a0;}
-.about-p{color:#4a4380; line-height:1.7; font-size:1rem;}
+.about-p{color:#4a4380; line-height:1.8; font-size:1.12rem; margin:.4rem 0 1.1rem;}
 .chip-ai{width:150px; height:150px; margin:auto; border-radius:26px; display:flex; align-items:center;
          justify-content:center; font-size:3rem; font-weight:800; color:#5b4bdb;
          border:2px solid #8b5cf6; background:rgba(139,92,246,.10);
          box-shadow:0 0 40px rgba(139,92,246,.30); transform:rotate(-8deg);}
+
+/* ---------- prediction details ---------- */
+.sub-h{color:#5b5390; font-size:.85rem; font-weight:600; margin:0 0 .5rem;}
+.seen{width:112px; height:112px; background:#000; border-radius:10px; image-rendering:pixelated; display:block;}
+.t3{display:flex; align-items:center; gap:.6rem; margin:.5rem 0; color:#2b2160; font-size:.95rem; font-weight:600;}
+.t3 .bar{flex:1; margin:0;}
+.t3 span:first-child{width:14px;}
+.t3 span:last-child{width:52px; text-align:right;}
+.nbrs{display:flex; gap:.9rem; flex-wrap:wrap;}
+.nb{text-align:center; color:#2b2160; font-size:.8rem; font-weight:600;}
+.nb img{width:84px; height:84px; border-radius:8px; image-rendering:pixelated; background:#000; display:block; margin-bottom:.25rem;}
+.nb small{color:#6a62a0; font-weight:500;}
+.how{background:rgba(255,255,255,.75); border:1px solid #ddd4f8; border-radius:16px; padding:1rem 1.1rem; margin-top:.9rem;}
+.how .res-title{font-size:1rem; margin-bottom:.2rem;}
+.step{display:flex; gap:.7rem; align-items:flex-start; color:#2b2160; font-size:.88rem; line-height:1.45; margin:.6rem 0 0;}
+.step b{background:#5b4bdb; color:#fff; min-width:22px; height:22px; border-radius:50%;
+        display:inline-flex; align-items:center; justify-content:center; font-size:.75rem;}
+.note{color:#5b5390; font-size:.8rem; margin-top:.6rem;}
+.st-key-dl button{background:#fff; color:#2b2160; border:1px solid #cfc5f5; border-radius:12px; font-weight:600;}
+.st-key-dl button p{color:#2b2160 !important;}
+
+/* ---------- model comparison ---------- */
+.mrow{display:flex; align-items:center; gap:.8rem; margin:.55rem 0; color:#2b2160; font-size:.92rem;}
+.mname{width:190px; font-weight:600;}
+.mval{width:62px; text-align:right; font-weight:700;}
+.mrow .bar{flex:1; margin:0; height:12px;}
+.mrow .bar div{height:12px;}
+.hist td.l, .hist th.l{text-align:left; padding-left:1.1rem;}
+.hist tr.best td{background:#f4f0ff;}
+.cm{width:100%; border-collapse:collapse; font-size:.78rem; text-align:center; margin-top:.4rem;}
+.cm th{color:#5b5390; font-weight:600; padding:.3rem;}
+.cm td{padding:.4rem .15rem; border:1px solid #fff; font-weight:600;}
+.err{display:flex; justify-content:space-between; color:#2b2160; font-size:.92rem; padding:.4rem 0; border-bottom:1px solid #eee9fb;}
+.err span{color:#6a62a0;}
+
+/* ---------- insights ---------- */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1rem;}
+.kpi{background:#fff; border-radius:16px; padding:1rem 1.2rem; box-shadow:0 12px 30px rgba(91,75,219,.12);}
+.kpi small{color:#6a62a0; font-size:.8rem; font-weight:600;}
+.kpi b{display:block; color:#2b2160; font-size:1.7rem; line-height:1.3;}
+.kpi span{color:#5b5390; font-size:.8rem;}
+.mini{display:flex; align-items:center; gap:.5rem; min-width:150px;}
+.mini .bar{flex:1; margin:0; height:8px;}
+.mini .bar div{height:8px;}
+.mini span{width:38px; text-align:right; font-size:.85rem;}
+.avgs{display:grid; grid-template-columns:repeat(5,1fr); gap:.9rem; margin-top:.5rem;}
+.av{text-align:center; color:#2b2160; font-size:.85rem; font-weight:600;}
+.av img{width:100%; max-width:90px; aspect-ratio:1; border-radius:10px; image-rendering:pixelated; background:#000; display:block; margin:0 auto .25rem;}
+.av small{color:#6a62a0; font-weight:500;}
+.takeaway{color:#2b2160; font-size:.92rem; line-height:1.6; margin:.5rem 0 0;}
+
+/* ---------- about: equal-height row ---------- */
+.about-grid{display:grid; grid-template-columns:1.5fr 1.1fr .9fr; gap:1.2rem; align-items:stretch;}
+.about-text{display:flex; flex-direction:column; justify-content:center; align-items:flex-start;}
+.about-grid .glass{display:flex; flex-direction:column; height:auto;}
+.glass-body{flex:1; display:flex; flex-direction:column; justify-content:space-evenly;}
+.glass-body .row, .glass-body .chk{margin:.35rem 0;}
+.glass-body .row span:first-child{flex:none; width:84px;}
+.glass-body .row span:last-child{flex:1; white-space:nowrap;}
+a.btn-about, a.btn-about:visited{display:inline-block; background:linear-gradient(90deg,#4f46e5,#7c3aed);
+    color:#fff !important; padding:.7rem 1.5rem; border-radius:12px; font-weight:700; font-size:.95rem;
+    text-decoration:none !important;}
+a.btn-about:hover{filter:brightness(1.1);}
+@media (max-width:800px){.about-grid{grid-template-columns:1fr;}}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -227,32 +299,70 @@ def preprocess(img: Image.Image):
     return out
 
 
+def thumb_b64(arr: np.ndarray, size: int = 56) -> str:
+    im = Image.fromarray(np.clip(arr, 0, 255).astype("uint8")).resize((size, size), Image.NEAREST)
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def get_neighbors(model, x, k: int = 3):
+    """The k closest MNIST training images the KNN used for this prediction."""
+    try:
+        dist, idx = model.kneighbors(x, n_neighbors=k)
+        fit_x = np.asarray(model._fit_X)
+        y_enc = np.asarray(model._y)
+        out = []
+        for d, i in zip(dist[0], idx[0]):
+            img = fit_x[i].reshape(28, 28).astype("float32")
+            if img.max() <= 1.5:                      # stored as 0-1 -> back to 0-255
+                img = img * 255.0
+            out.append({
+                "img": thumb_b64(img, 84),
+                "label": int(model.classes_[y_enc[i]]),
+                "dist": float(d),
+            })
+        return out
+    except Exception:
+        return []                                      # feature simply hidden if unavailable
+
+
 def predict(img: Image.Image):
-    """Return (digit, confidence %, 28x28 array) or None."""
+    """Return a result dict (digit, conf, top3, images, neighbors) or None."""
     arr = preprocess(img)
     if arr is None:
         return None
     model = load_model()
     x = (arr / 255.0).reshape(1, -1).astype("float32")
     proba = model.predict_proba(x)[0]
-    digit = int(model.classes_[proba.argmax()])
-    return digit, float(proba.max() * 100), arr
+    order = np.argsort(proba)[::-1][:3]
+    top3 = [(int(model.classes_[i]), float(proba[i] * 100)) for i in order]
+    return {
+        "digit": top3[0][0],
+        "conf": top3[0][1],
+        "top3": top3,
+        "seen": thumb_b64(arr, 112),
+        "thumb": thumb_b64(arr, 56),
+        "neighbors": get_neighbors(model, x),
+    }
 
 
-def thumb_b64(arr: np.ndarray) -> str:
-    im = Image.fromarray(arr.astype("uint8")).resize((56, 56), Image.NEAREST)
-    buf = io.BytesIO()
-    im.save(buf, format="PNG")
-    return base64.b64encode(buf.getvalue()).decode()
-
-
-def add_history(arr, digit, conf):
+def add_history(res):
     now = datetime.now()
     stamp = f"{now.strftime('%b')} {now.day}, {now.year} – {now.strftime('%I:%M %p')}"
     st.session_state.history.insert(
-        0, {"img": thumb_b64(arr), "digit": digit, "conf": conf, "time": stamp}
+        0, {"img": res["thumb"], "digit": res["digit"], "conf": res["conf"], "time": stamp}
     )
     del st.session_state.history[50:]
+
+
+def history_csv() -> str:
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["#", "Prediction", "Confidence (%)", "Date & Time"])
+    for i, r in enumerate(st.session_state.history, start=1):
+        writer.writerow([i, r["digit"], f'{r["conf"]:.1f}', r["time"]])
+    return buf.getvalue()
 
 
 # ----------------------------------------------------------------------------
@@ -287,21 +397,68 @@ def result_card(res, ring=False):
     )
 
 
+def details_section(res):
+    """Top-3 predictions, what the model sees, and the nearest training images."""
+    if not res:
+        return
+    st.write("")
+    with st.container(key="card2"):
+        st.markdown('<p class="card-title">🔍 Prediction details</p>', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 1.3, 1.9])
+        with c1:
+            st.markdown(
+                '<p class="sub-h">What the model sees (28 × 28)</p>'
+                f'<img class="seen" src="data:image/png;base64,{res["seen"]}">',
+                unsafe_allow_html=True,
+            )
+        with c2:
+            rows = ""
+            for rank, (d, p) in enumerate(res["top3"]):
+                fill = "" if rank == 0 else "background:#b9b0ec;"
+                rows += (f'<div class="t3"><span>{d}</span><div class="bar">'
+                         f'<div style="width:{max(p, 1):.1f}%;{fill}"></div></div>'
+                         f'<span>{p:.1f}%</span></div>')
+            st.markdown(f'<p class="sub-h">Top 3 predictions</p>{rows}', unsafe_allow_html=True)
+        with c3:
+            if res["neighbors"]:
+                items = "".join(
+                    f'<div class="nb"><img src="data:image/png;base64,{n["img"]}">'
+                    f'Digit {n["label"]}<br><small>distance {n["dist"]:.2f}</small></div>'
+                    for n in res["neighbors"]
+                )
+                st.markdown(
+                    '<p class="sub-h">3 closest training images (the KNN neighbors)</p>'
+                    f'<div class="nbrs">{items}</div>'
+                    '<p class="note">KNN predicts by finding the most similar images '
+                    'in the MNIST training set. Smaller distance means more similar.</p>',
+                    unsafe_allow_html=True,
+                )
+
+
 def go(page):
     st.session_state.page = page
 
 
 def navbar():
-    active = {"home": "home", "draw": "home", "upload": "home",
-              "about": "about", "history": "history"}[st.session_state.page]
+    page = st.session_state.page
+    # which top-bar button is highlighted for the current page
+    active = {"home": "home", "draw": "predict", "upload": "predict", "insights": "insights",
+              "models": "models", "about": "about", "history": "history"}[page]
+    items = [  # (button key, label, page it opens)
+        ("home", "Home", "home"),
+        ("predict", "Predict", "draw"),
+        ("insights", "Insights", "insights"),
+        ("models", "Models", "models"),
+        ("about", "About", "about"),
+        ("history", "History", "history"),
+    ]
     with st.container(key="nav"):
-        c0, c1, c2, c3 = st.columns([6, 1, 1, 1])
-        c0.markdown('<div class="logo">🧠 Digit AI</div>', unsafe_allow_html=True)
-        for col, (key, label) in zip((c1, c2, c3),
-                                     (("home", "Home"), ("about", "About"), ("history", "History"))):
+        cols = st.columns([2.2, 1, 1, 1, 1, 1, 1])
+        cols[0].markdown('<div class="logo">🧠 Digit AI</div>', unsafe_allow_html=True)
+        for col, (key, label, target) in zip(cols[1:], items):
             col.button(label, key=f"nav_{key}", use_container_width=True,
                        type="primary" if active == key else "secondary",
-                       on_click=go, args=(key,))
+                       on_click=go, args=(target,))
 
 
 def back_button():
@@ -325,7 +482,7 @@ def page_home():
     with left:
         st.markdown(
             """
-            <div class="hero" style="padding-top:2.2rem;">
+            <div class="hero" style="padding-top:.6rem;">
               <h1>Handwritten<br>Digit <span>Recognition</span></h1>
               <p>Turn your handwritten digit<br>into a smart prediction!</p>
               <div class="chk"><b>✓</b>Draw or Upload</div>
@@ -335,7 +492,6 @@ def page_home():
             """,
             unsafe_allow_html=True,
         )
-        st.write("")
         with st.container(key="try"):
             st.button("Try Now →", type="primary", on_click=go, args=("draw",))
     with right:
@@ -410,9 +566,8 @@ def page_draw():
             with left:
                 st.warning("Draw a digit first, then press Predict.")
         else:
-            digit, conf, arr = out
-            st.session_state.draw_result = {"digit": digit, "conf": conf}
-            add_history(arr, digit, conf)
+            st.session_state.draw_result = out
+            add_history(out)
 
     with right:
         result_card(st.session_state.draw_result, ring=True)
@@ -421,6 +576,17 @@ def page_draw():
             "Use one thick stroke and fill most of the box.</div>",
             unsafe_allow_html=True,
         )
+        st.markdown(
+            """
+            <div class="how"><div class="res-title">How it works</div>
+              <div class="step"><b>1</b>Your drawing is cleaned and resized to 28 × 28.</div>
+              <div class="step"><b>2</b>KNN finds the 3 most similar MNIST images.</div>
+              <div class="step"><b>3</b>Those neighbors vote, and the winner is shown.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    details_section(st.session_state.draw_result)
 
 
 def page_upload():
@@ -456,24 +622,34 @@ def page_upload():
                 with left:
                     st.warning("No digit found in that image. Try a clearer one.")
             else:
-                digit, conf, arr = out
-                st.session_state.upload_result = {"digit": digit, "conf": conf}
-                add_history(arr, digit, conf)
+                st.session_state.upload_result = out
+                add_history(out)
 
     with right:
         result_card(st.session_state.upload_result)
         if shown_img is not None:
             st.write("")
             st.image(shown_img, caption="Uploaded Image", width=150)
+    details_section(st.session_state.upload_result)
 
 
 def page_history():
-    c1, c2 = st.columns([4, 1])
+    c1, c_dl, c2 = st.columns([3, 1, 1])
     c1.markdown(
         '<p class="page-title">🕘 Prediction History</p>'
         '<p class="page-sub">Your recent predictions in this session</p>',
         unsafe_allow_html=True,
     )
+    with c_dl:
+        with st.container(key="dl"):
+            st.download_button(
+                "⬇ Download CSV",
+                data=history_csv(),
+                file_name="digit_predictions.csv",
+                mime="text/csv",
+                use_container_width=True,
+                disabled=not st.session_state.history,
+            )
     with c2:
         with st.container(key="clearhist"):
             if st.button("🗑 Clear History", use_container_width=True):
@@ -505,45 +681,269 @@ def page_history():
     )
 
 
-def page_about():
-    st.write("")
-    a, b, c = st.columns([1.5, 1.1, 0.9])
-    with a:
+# Results copied from the training notebook (validation set: 10,002 images)
+MODEL_RESULTS = [
+    ("K-Nearest Neighbors", 0.972006, 0.972200, 0.972006, 0.971971),
+    ("Random Forest", 0.966907, 0.966959, 0.966907, 0.966898),
+    ("Logistic Regression", 0.921216, 0.921161, 0.921216, 0.921129),
+    ("Support Vector Machine", 0.913617, 0.913389, 0.913617, 0.913405),
+]
+K_RESULTS = [(1, 0.969506), (3, 0.972006), (5, 0.969006), (7, 0.968206)]
+# Final KNN on the 10,000 test images: rows = actual digit, columns = predicted digit
+FINAL_CM = [
+    [973, 1, 1, 0, 0, 0, 3, 1, 1, 0],
+    [0, 1132, 2, 0, 0, 0, 1, 0, 0, 0],
+    [10, 6, 995, 2, 0, 0, 1, 14, 3, 1],
+    [0, 0, 3, 975, 1, 15, 1, 8, 5, 2],
+    [0, 7, 0, 0, 942, 0, 5, 2, 1, 25],
+    [5, 1, 0, 11, 2, 858, 5, 1, 3, 6],
+    [5, 3, 0, 0, 4, 3, 943, 0, 0, 0],
+    [0, 22, 4, 0, 2, 0, 0, 990, 0, 10],
+    [7, 0, 2, 12, 6, 12, 3, 3, 922, 7],
+    [3, 4, 2, 8, 8, 3, 1, 8, 2, 970],
+]
+TOP_ERRORS = [(4, 9, 25), (7, 1, 22), (3, 5, 15), (2, 7, 14), (8, 3, 12)]
+
+
+def confusion_html():
+    peak = max(max(r) for r in FINAL_CM)
+    head = "".join(f"<th>{j}</th>" for j in range(10))
+    body = ""
+    for i, row in enumerate(FINAL_CM):
+        cells = ""
+        for v in row:
+            a = (v / peak) ** 0.5 if v else 0
+            color = "#fff" if a > 0.55 else "#2b2160"
+            cells += f'<td style="background:rgba(91,75,219,{a:.2f});color:{color}">{v}</td>'
+        body += f"<tr><th>{i}</th>{cells}</tr>"
+    return f'<table class="cm"><tr><th></th>{head}</tr>{body}</table>'
+
+
+def page_models():
+    st.markdown(
+        '<p class="page-title">📊 Model Comparison</p>'
+        '<p class="page-sub">Four models were trained on MNIST and compared on 10,002 '
+        "validation images. KNN scored highest and became the final model.</p>",
+        unsafe_allow_html=True,
+    )
+
+    bars, rows = "", ""
+    for i, (name, acc, prec, rec, f1) in enumerate(MODEL_RESULTS):
+        best = i == 0
+        width = (acc - 0.85) / 0.15 * 100            # bars start at 85% so gaps are visible
+        fill = "" if best else "background:#b9b0ec;"
+        bars += (f'<div class="mrow"><span class="mname">{name}</span>'
+                 f'<div class="bar"><div style="width:{width:.1f}%;{fill}"></div></div>'
+                 f'<span class="mval">{acc * 100:.2f}%</span></div>')
+        rows += (f'<tr class="{"best" if best else ""}"><td class="l">{name}{" ⭐" if best else ""}</td>'
+                 f"<td>{acc * 100:.2f}%</td><td>{prec * 100:.2f}%</td>"
+                 f"<td>{rec * 100:.2f}%</td><td>{f1 * 100:.2f}%</td></tr>")
+
+    with st.container(key="card"):
         st.markdown(
-            """
-            <p class="page-title">ℹ️ About This Project</p>
-            <p class="about-p">This project uses a K-Nearest Neighbors (KNN) machine learning model
-            to recognize handwritten digits from the MNIST dataset. It can accurately predict
-            digits (0-9) with an impressive 97% accuracy.</p>
-            """,
+            '<p class="card-title">Validation accuracy</p>'
+            f'{bars}<p class="note">Bars start at 85% to make the differences easier to see.</p>',
             unsafe_allow_html=True,
         )
-        st.link_button("Learn More →", "https://scikit-learn.org/stable/modules/neighbors.html",
-                       type="primary")
-    with b:
+    st.write("")
+    st.markdown(
+        f"""<div class="hist"><table>
+          <tr><th class="l">Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 score</th></tr>
+          {rows}</table></div>""",
+        unsafe_allow_html=True,
+    )
+    st.write("")
+
+    left, right = st.columns([1.5, 1])
+    with left:
+        with st.container(key="card2"):
+            st.markdown(
+                '<p class="card-title">Final KNN confusion matrix</p>'
+                '<p class="card-sub">10,000 test images · 9,700 correct (97.00%) · '
+                "rows = actual digit, columns = predicted digit</p>"
+                + confusion_html(),
+                unsafe_allow_html=True,
+            )
+    with right:
+        errs = "".join(
+            f'<div class="err"><b>{a} → {b}</b><span>{n} errors</span></div>'
+            for a, b, n in TOP_ERRORS
+        )
+        ks = "".join(
+            f'<div class="err"><b>k = {k}{" ⭐" if k == 3 else ""}</b><span>{acc * 100:.2f}%</span></div>'
+            for k, acc in K_RESULTS
+        )
+        with st.container(key="card3"):
+            st.markdown(
+                '<p class="card-title">Most common mistakes</p>'
+                '<p class="card-sub">Actual → predicted (test set)</p>'
+                f"{errs}"
+                '<p class="card-title" style="margin-top:1.2rem;">Why k = 3?</p>'
+                '<p class="card-sub">Validation accuracy by number of neighbors</p>'
+                f"{ks}",
+                unsafe_allow_html=True,
+            )
+
+
+# Final KNN, per digit, on the 10,000 test images (from the notebook)
+PER_DIGIT = [  # digit, precision, recall, f1, images
+    (0, 0.97, 0.99, 0.98, 980), (1, 0.96, 1.00, 0.98, 1135), (2, 0.99, 0.96, 0.98, 1032),
+    (3, 0.97, 0.97, 0.97, 1010), (4, 0.98, 0.96, 0.97, 982), (5, 0.96, 0.96, 0.96, 892),
+    (6, 0.98, 0.98, 0.98, 958), (7, 0.96, 0.96, 0.96, 1028), (8, 0.98, 0.95, 0.96, 974),
+    (9, 0.95, 0.96, 0.96, 1009),
+]
+ERRORS_10 = [(4, 9, 25), (7, 1, 22), (3, 5, 15), (2, 7, 14), (8, 3, 12),
+             (8, 5, 12), (5, 3, 11), (2, 0, 10), (7, 9, 10), (9, 7, 8)]
+
+
+@st.cache_resource(show_spinner=False)
+def training_stats():
+    """Average image and image count of every digit, read from the model's training data."""
+    try:
+        model = load_model()
+        X = np.asarray(model._fit_X, dtype="float32")
+        y = np.asarray(model.classes_)[np.asarray(model._y)]
+        scale = 255.0 if X.max() <= 1.5 else 1.0
+        avgs = [thumb_b64(X[y == d].mean(axis=0).reshape(28, 28) * scale, 90) for d in range(10)]
+        counts = [int((y == d).sum()) for d in range(10)]
+        return avgs, counts
+    except Exception:
+        return None
+
+
+def mini_bar(value, low=0.90):
+    width = max((value - low) / (1 - low) * 100, 2)      # bars start at 90% so gaps are visible
+    return (f'<div class="mini"><div class="bar"><div style="width:{width:.0f}%"></div></div>'
+            f"<span>{value * 100:.0f}%</span></div>")
+
+
+def page_insights():
+    st.markdown(
+        '<p class="page-title">💡 Insights</p>'
+        '<p class="page-sub">What the final KNN model does well, where it struggles, '
+        "and what it learned from. Numbers come from the 10,000 MNIST test images.</p>",
+        unsafe_allow_html=True,
+    )
+
+    best_rec = max(PER_DIGIT, key=lambda r: r[2])
+    low_rec = min(PER_DIGIT, key=lambda r: r[2])
+    low_pre = min(PER_DIGIT, key=lambda r: r[1])
+    total_err = 300
+    top10 = sum(n for _, _, n in ERRORS_10)
+    st.markdown(
+        f"""<div class="kpis">
+          <div class="kpi"><small>Test accuracy</small><b>97.00%</b><span>9,700 of 10,000 correct</span></div>
+          <div class="kpi"><small>Easiest digit</small><b>Digit {best_rec[0]}</b><span>recall {best_rec[2] * 100:.0f}%, almost never missed</span></div>
+          <div class="kpi"><small>Hardest to find</small><b>Digit {low_rec[0]}</b><span>recall {low_rec[2] * 100:.0f}%, most often mistaken</span></div>
+          <div class="kpi"><small>Least precise</small><b>Digit {low_pre[0]}</b><span>precision {low_pre[1] * 100:.0f}%, others get called 9</span></div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+
+    left, right = st.columns([1.5, 1])
+    with left:
+        rows = "".join(
+            f"<tr><td><b>{d}</b></td><td>{mini_bar(p)}</td><td>{mini_bar(r)}</td>"
+            f"<td>{f * 100:.0f}%</td><td>{n:,}</td></tr>"
+            for d, p, r, f, n in PER_DIGIT
+        )
         st.markdown(
-            """
-            <div class="glass"><h4>Project Details</h4>
+            f"""<div class="hist"><table>
+              <tr><th>Digit</th><th>Precision</th><th>Recall</th><th>F1</th><th>Test images</th></tr>
+              {rows}</table></div>
+              <p class="note" style="color:#5b5390">Bars start at 90%. Precision: when the model says this digit, how often it is right.
+              Recall: how many real examples of the digit it finds.</p>""",
+            unsafe_allow_html=True,
+        )
+    with right:
+        errs = "".join(
+            f'<div class="err"><b>{a} → {b}</b><span>{n} errors</span></div>'
+            for a, b, n in ERRORS_10
+        )
+        with st.container(key="card"):
+            st.markdown(
+                '<p class="card-title">Top 10 mistakes</p>'
+                '<p class="card-sub">Actual digit → what the model predicted</p>'
+                f"{errs}"
+                f'<p class="takeaway">These 10 pairs cause {top10} of the {total_err} errors '
+                f"({top10 / total_err * 100:.0f}%). Most are look-alike shapes, "
+                "such as 4 and 9, 7 and 1, or 3 and 5.</p>",
+                unsafe_allow_html=True,
+            )
+
+    st.write("")
+    stats = training_stats()
+    if stats:
+        avgs, counts = stats
+        items = "".join(
+            f'<div class="av"><img src="data:image/png;base64,{img}">Digit {d}'
+            f"<br><small>{n:,} images</small></div>"
+            for d, (img, n) in enumerate(zip(avgs, counts))
+        )
+        with st.container(key="card2"):
+            st.markdown(
+                '<p class="card-title">What the model learned from</p>'
+                f'<p class="card-sub">The average of all {sum(counts):,} training images of each digit. '
+                "KNN compares every new drawing with images like these.</p>"
+                f'<div class="avgs">{items}</div>',
+                unsafe_allow_html=True,
+            )
+
+
+def page_about():
+    st.write("")
+    st.markdown(
+        """
+        <div class="about-grid">
+          <div class="about-text">
+            <p class="page-title" style="font-size:2.1rem;">ℹ️ About This Project</p>
+            <p class="about-p">This project uses a K-Nearest Neighbors (KNN) machine learning model
+            to recognize handwritten digits from the MNIST dataset. It can accurately predict
+            digits (0-9) with an impressive 97% accuracy. Draw a digit or upload an image and the
+            app shows the prediction with a confidence score, the top 3 guesses, and the
+            training images that influenced the result.</p>
+            <a class="btn-about" href="https://scikit-learn.org/stable/modules/neighbors.html"
+               target="_blank" rel="noopener">Learn More →</a>
+          </div>
+          <div class="glass"><h4>Project Details</h4>
+            <div class="glass-body">
               <div class="row"><span>Dataset</span><span>: MNIST (70,000 images)</span></div>
               <div class="row"><span>Algorithm</span><span>: K-Nearest Neighbors (KNN)</span></div>
               <div class="row"><span>Image Size</span><span>: 28 × 28 pixels</span></div>
               <div class="row"><span>Accuracy</span><span>: 97%</span></div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with c:
-        st.markdown(
-            """
-            <div class="glass"><h4>Key Features</h4>
+          </div>
+          <div class="glass"><h4>Key Features</h4>
+            <div class="glass-body">
               <div class="chk"><b>✓</b>Draw Digits</div>
               <div class="chk"><b>✓</b>Upload Images</div>
               <div class="chk"><b>✓</b>Instant Prediction</div>
               <div class="chk"><b>✓</b>Prediction History</div>
             </div>
-            """,
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.write("")
+    with st.container(key="card"):
+        st.markdown(
+            '<p class="card-title">📬 Contact</p>'
+            '<p class="card-sub">Interested in this project, or want to work together? Let us connect.</p>',
             unsafe_allow_html=True,
         )
+        links = []
+        for label, value in CONTACT.items():
+            if value:
+                if label == "Email" and not value.startswith("mailto:"):
+                    value = "mailto:" + value
+                links.append((label, value))
+        if links:
+            cols = st.columns([1] * len(links) + [max(1, 5 - len(links))])
+            for col, (label, url) in zip(cols, links):
+                col.link_button(label, url, use_container_width=True)
+
     st.write("")
     st.markdown('<div class="chip-ai">AI</div>', unsafe_allow_html=True)
     st.markdown(
@@ -574,5 +974,7 @@ st.write("")
     "draw": page_draw,
     "upload": page_upload,
     "history": page_history,
+    "insights": page_insights,
+    "models": page_models,
     "about": page_about,
 }[st.session_state.page]()
