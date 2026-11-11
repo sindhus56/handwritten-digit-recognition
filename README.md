@@ -2,6 +2,8 @@
 
 A Streamlit web app that recognizes handwritten digits (0-9). Draw a digit with your mouse or upload an image, and get an instant prediction with a confidence score, the top 3 guesses, and the training images that influenced the result.
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://digit-ai-sindhu.streamlit.app)
+
 **Live demo:** [https://digit-ai-sindhu.streamlit.app](https://digit-ai-sindhu.streamlit.app)
 
 ## Features
